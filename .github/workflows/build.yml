@@ -1,0 +1,73 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Set up Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Setup Web Distribution Directory
+      run: |
+        # Create a clean folder for the app assets
+        mkdir -p dist
+        
+        # Copy web files and directories safely into dist
+        cp *.html *.js *.json *.png dist/ 2>/dev/null || true
+        cp -r Styles Scripts Assets dist/ 2>/dev/null || true
+
+    - name: Install Capacitor & Tools
+      run: |
+        npm init -y
+        npm install @capacitor/core @capacitor/cli @capacitor/android
+        # If you use SCSS, we compile it from your Styles folder into the dist target
+        npm install -D sass
+        npx sass dist/Styles:dist/Styles --no-source-map 2>/dev/null || true
+
+    - name: Initialize Capacitor Config
+      run: |
+        cat <<EOF > capacitor.config.json
+        {
+          "appId": "com.bjhos.app",
+          "appName": "BJH_OS",
+          "webDir": "dist"
+        }
+        EOF
+
+    - name: Add Android Platform & Sync
+      run: |
+        npx cap init BJH_OS com.bjhos.app --web-dir=dist
+        npx cap add android
+        npx cap sync android
+
+    - name: Build Debug APK with Gradle
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleDebug
+
+    - name: Upload APK Artifact
+      uses: actions/artifacts/upload-artifact@v4
+      with:
+        name: BJH-OS-Debug-APK
+        path: android/app/build/outputs/apk/debug/app-debug.apk
