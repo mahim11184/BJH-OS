@@ -22,7 +22,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '21'
 
     - name: Accept Pre-installed Android SDK Licenses
       run: |
@@ -64,7 +64,7 @@ jobs:
       run: |
         cd android
         
-        # Inject standard gradle configurations matching Java 17
+        # Inject standard gradle configurations matching Java 21
         sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.20"/' build.gradle 2>/dev/null || true
         
         chmod +x gradlew
