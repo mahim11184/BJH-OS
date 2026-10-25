@@ -60,13 +60,35 @@ jobs:
         npx cap add android
         npx cap sync android
 
+    - name: Fix Kotlin & Duplicate Class Conflict
+      run: |
+        cd android
+        # Build.gradle ফাইলে সঠিক কোটলিন ভার্সন এবং ডুপ্লিকেট ক্লাস রুলস ফোর্স করা হচ্ছে
+        sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.24"/' build.gradle 2>/dev/null || true
+        
+        # অ্যাপ লেভেলের build.gradle ফাইলে এক্সক্লুশন রুলস এবং কনফ্লিক্ট রেজোলিউশন অ্যাড করা হচ্ছে
+        cat << 'EOF' >> app/build.gradle
+        
+        configurations.all {
+            resolutionStrategy {
+                force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'
+                force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24'
+            }
+        }
+        
+        android {
+            configurations.all {
+                resolutionStrategy.dependencySubstitution {
+                    substitute module('org.jetbrains.kotlin:kotlin-stdlib-jdk7') using module('org.jetbrains.kotlin:kotlin-stdlib:1.9.24')
+                    substitute module('org.jetbrains.kotlin:kotlin-stdlib-jdk8') using module('org.jetbrains.kotlin:kotlin-stdlib:1.9.24')
+                }
+            }
+        }
+        EOF
+
     - name: Build Debug APK with Gradle
       run: |
         cd android
-        
-        # Inject standard gradle configurations matching Java 21
-        sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.20"/' build.gradle 2>/dev/null || true
-        
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon
 
