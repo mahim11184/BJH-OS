@@ -26,7 +26,6 @@ jobs:
 
     - name: Accept Pre-installed Android SDK Licenses
       run: |
-        # Use the SDK pre-installed on the GitHub runner
         mkdir -p $ANDROID_HOME/licenses
         echo "24a33b3b747e6fd53a308b3e228be00718c3a98d" > $ANDROID_HOME/licenses/android-sdk-license
         echo "84831b9409646a918e30573bab4c9c91346d8abd" > $ANDROID_HOME/licenses/android-sdk-preview-license
@@ -34,10 +33,7 @@ jobs:
 
     - name: Setup Web Distribution Directory
       run: |
-        # Create a clean folder for the app assets
         mkdir -p dist
-        
-        # Copy web files and directories safely into dist
         cp *.html *.js *.json *.png dist/ 2>/dev/null || true
         cp -r Styles Scripts Assets dist/ 2>/dev/null || true
 
@@ -67,8 +63,12 @@ jobs:
     - name: Build Debug APK with Gradle
       run: |
         cd android
+        
+        # Inject standard gradle configurations matching Java 17
+        sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.20"/' build.gradle 2>/dev/null || true
+        
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
