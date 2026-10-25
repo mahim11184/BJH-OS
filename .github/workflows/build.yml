@@ -27,6 +27,14 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
 
+    - name: Accept Android SDK Licenses
+      run: |
+        mkdir -p ${ANDROID_HOME}/licenses
+        echo "24a33b3b747e6fd53a308b3e228be00718c3a98d" > ${ANDROID_HOME}/licenses/android-sdk-license
+        echo "84831b9409646a918e30573bab4c9c91346d8abd" > ${ANDROID_HOME}/licenses/android-sdk-preview-license
+        # Force accept dynamically via sdkmanager
+        yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
     - name: Setup Web Distribution Directory
       run: |
         # Create a clean folder for the app assets
