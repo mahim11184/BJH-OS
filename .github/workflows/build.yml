@@ -40,7 +40,6 @@ jobs:
       run: |
         npm init -y
         npm install @capacitor/core @capacitor/cli @capacitor/android
-        # If you use SCSS, we compile it from your Styles folder into the dist target
         npm install -D sass
         npx sass dist/Styles:dist/Styles --no-source-map 2>/dev/null || true
 
@@ -67,7 +66,7 @@ jobs:
         ./gradlew assembleDebug
 
     - name: Upload APK Artifact
-      uses: actions/artifacts/upload-artifact@v4
+      uses: actions/upload-artifact@v4
       with:
         name: BJH-OS-Debug-APK
         path: android/app/build/outputs/apk/debug/app-debug.apk
